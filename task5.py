@@ -5,7 +5,6 @@ class LightNode:
     def outer_html(self):
         pass
 
-
 class LightTextNode(LightNode):
     def __init__(self, text):
         self.text = text
@@ -16,6 +15,35 @@ class LightTextNode(LightNode):
     def outer_html(self):
         return self.text
 
+class ImageLoadStrategy:
+    def load(self, href):
+        pass
+
+class NetworkImageLoadStrategy(ImageLoadStrategy):
+    def load(self, href):
+        print("Strategy: Downloading image from network URL: " + href)
+        return "Network bytes data"
+
+class FileSystemImageLoadStrategy(ImageLoadStrategy):
+    def load(self, href):
+        print("Strategy: Reading image from local path: " + href)
+        return "Local storage bytes data"
+
+class LightImageNode(LightNode):
+    def __init__(self, href, load_strategy):
+        self.tag = "img"
+        self.href = href
+        self.load_strategy = load_strategy
+
+    def set_strategy(self, load_strategy):
+        self.load_strategy = load_strategy
+
+    def inner_html(self):
+        return ""
+
+    def outer_html(self):
+        data = self.load_strategy.load(self.href)
+        return '<img src="' + self.href + '" data-bytes="' + data + '"/>'
 
 class LightElementNode(LightNode):
     def __init__(self, tag, display_type, closure_type, css_classes=None):
@@ -53,21 +81,17 @@ class LightElementNode(LightNode):
 
         return start_tag + self.inner_html() + end_tag
 
-
 if __name__ == "__main__":
-    ul = LightElementNode("ul", "block", "pair", ["main-list"])
+    net_strategy = NetworkImageLoadStrategy()
+    fs_strategy = FileSystemImageLoadStrategy()
 
-    li1 = LightElementNode("li", "block", "pair", ["list-item"])
-    li1.add_child(LightTextNode("First item"))
+    div = LightElementNode("div", "block", "pair", ["gallery"])
 
-    li2 = LightElementNode("li", "block", "pair", ["list-item", "active"])
-    li2.add_child(LightTextNode("Second item"))
+    img_web = LightImageNode("https://example.com/logo.png", net_strategy)
+    img_local = LightImageNode("/images/avatar.jpg", fs_strategy)
 
-    ul.add_child(li1)
-    ul.add_child(li2)
+    div.add_child(img_web)
+    div.add_child(img_local)
 
-    print("--- Outer HTML ---")
-    print(ul.outer_html())
-
-    print("\n--- Inner HTML ---")
-    print(ul.inner_html())
+    print("--- Executing Render with Strategies ---")
+    print(div.outer_html())
