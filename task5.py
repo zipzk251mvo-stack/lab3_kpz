@@ -5,7 +5,6 @@ class LightNode:
     def outer_html(self):
         pass
 
-
 class LightTextNode(LightNode):
     def __init__(self, text):
         self.text = text
@@ -16,7 +15,6 @@ class LightTextNode(LightNode):
     def outer_html(self):
         return self.text
 
-
 class LightElementNode(LightNode):
     def __init__(self, tag, display_type, closure_type, css_classes=None):
         self.tag = tag
@@ -24,9 +22,20 @@ class LightElementNode(LightNode):
         self.closure_type = closure_type
         self.css_classes = css_classes if css_classes else []
         self.children = []
+        self.events = {}
 
     def add_child(self, node):
         self.children.append(node)
+
+    def add_event_listener(self, event_type, callback):
+        if event_type not in self.events:
+            self.events[event_type] = []
+        self.events[event_type].append(callback)
+
+    def trigger(self, event_type):
+        if event_type in self.events:
+            for callback in self.events[event_type]:
+                callback()
 
     def inner_html(self):
         result = ""
@@ -53,21 +62,22 @@ class LightElementNode(LightNode):
 
         return start_tag + self.inner_html() + end_tag
 
-
 if __name__ == "__main__":
-    ul = LightElementNode("ul", "block", "pair", ["main-list"])
+    button = LightElementNode("button", "inline", "pair", ["btn-submit"])
+    button.add_child(LightTextNode("Click Me!"))
 
-    li1 = LightElementNode("li", "block", "pair", ["list-item"])
-    li1.add_child(LightTextNode("First item"))
+    def on_click_handler():
+        print("Observer notification: Button was clicked!")
 
-    li2 = LightElementNode("li", "block", "pair", ["list-item", "active"])
-    li2.add_child(LightTextNode("Second item"))
+    def on_hover_handler():
+        print("Observer notification: Mouse hover detected!")
 
-    ul.add_child(li1)
-    ul.add_child(li2)
+    button.add_event_listener("click", on_click_handler)
+    button.add_event_listener("mouseover", on_hover_handler)
 
-    print("--- Outer HTML ---")
-    print(ul.outer_html())
+    print("--- Current Button HTML ---")
+    print(button.outer_html())
 
-    print("\n--- Inner HTML ---")
-    print(ul.inner_html())
+    print("\n--- Simulating User Events ---")
+    button.trigger("click")
+    button.trigger("mouseover")
